@@ -1,0 +1,14 @@
+{
+  "name": "flickr-search",
+  "version": "1.0.0",
+  "main": "index.html",
+  "license": "MIT",
+  "scripts": {
+    "start": "parcel index.html --open",
+    "build": "parcel build index.html"
+  },
+  "dependencies": {
+    "parcel-bundler": "^1.12.4",
+    "requirejs": "^2.3.6"
+  }
+}
