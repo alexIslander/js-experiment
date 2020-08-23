@@ -1,0 +1,89 @@
+{
+	"info": {
+		"_postman_id": "a4e7b84a-5c8e-4b8b-b6f6-ea1fb635cad4",
+		"name": "Misc",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "GraphQL-Express",
+			"item": [
+				{
+					"name": "GET listings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST remove listing",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n        \"id\": \"004\",\n        \"title\": \"Clean and fully furnished apartment. 5 min away from CN Tower II.\",\n        \"image\": \"https://res.cloudinary.com/tiny-house/image/upload/v1560641352/mock/Toronto/toronto-listing-1_exv0tf.jpg\",\n        \"address\": \"3210 Scotchmere Dr W, Toronto, ON, CA\",\n        \"price\": 11000,\n        \"numOfGuests\": 3,\n        \"numOfBeds\": 1,\n        \"numOfBaths\": 2,\n        \"rating\": 4\n    }"
+						},
+						"url": {
+							"raw": "http://localhost:5000/add-listing",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"add-listing"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE remove listing",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"id\": \"001\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:5000/delete-listing",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"delete-listing"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
