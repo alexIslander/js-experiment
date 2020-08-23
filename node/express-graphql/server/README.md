@@ -255,6 +255,218 @@ app.delete('/delete-listing', (req, res) => {
     }
 });
 ```
+- ## Introduce GraphQL instead of REST
+**Add Apollo dependencies**
+0. Create your new 'feature/node_express_graphql_apollo' branch from 'feature/node_express_graphql' branch.
+1. To install Apollo, run: `npm install apollo-server-express`
+2. To install GraphQL, run: `npm install graphql`
+3. Finally, install types as dev dependecy, run: `npm i -D @types/graphql`
+4. Setup Apollo in 'index.ts' file:
+```
+import express from "express";
+import { ApolloServer } from "apollo-server-express";
+
+const app = express();
+const port = 5000;
+const server = new ApolloServer();
+
+server.applyMiddleware({ app, path: "/api" });
+app.listen(port);
+
+console.log(`[app] : http://localhost:${port}`);
+```
+Please note the error in ApolloServer, it requires a schema!
+5. Create schema in newly created 'server/src/graphql.ts' file:
+```
+import { GraphQLSchema, GraphQLObjectType, GraphQLString } from "graphql";
+
+const query = new GraphQLObjectType({
+  name: "Query",
+  fields: {
+    hello: {
+      type: GraphQLString,
+      resolve: () => "Hello from the Query!"
+    }
+  }
+});
+
+const mutation = new GraphQLObjectType({
+  name: "Mutation",
+  fields: {
+    hello: {
+      type: GraphQLString,
+      resolve: () => "Hello from the Mutation!"
+    }
+  }
+});
+
+export const schema = new GraphQLSchema({ query, mutation });
+```
+6. Configure schema in 'server/src/index.ts':
+```
+import { schema } from './graphql';
+...
+const server = new ApolloServer({ schema });
+```
+Note: the error is gone.
+7. Run the server: `npm run start` and check the result: `http://localhost:5000/api`
+The Playground is present, where 'queries' and 'mutations'(actions) can be run.
+8. Try out the playground. Paste and run:
+```
+query {
+  hello
+}
+```
+Press play and the result is displayed.
+
+Paste and run:
+```
+mutation {
+  hello
+}
+```
+You are done. Express app is now prepared with Apollo Server. Now you can interact with the server without curl or Postman make use of the playground.
+
+9. Modify the graphql scheme in 'graphql.ts'. Create a new type:
+```
+const Listing = new GraphQLObjectType({
+  name: "Listing",
+  fields: {
+    id: { type: GraphQLNonNull(GraphQLID) },
+    title: { type: GraphQLNonNull(GraphQLString) },
+    image: { type: GraphQLNonNull(GraphQLString) },
+    address: { type: GraphQLNonNull(GraphQLString) },
+    price: { type: GraphQLNonNull(GraphQLInt) },
+    numOfGuests: { type: GraphQLNonNull(GraphQLInt) },
+    numOfBeds: { type: GraphQLNonNull(GraphQLInt) },
+    numOfBaths: { type: GraphQLNonNull(GraphQLInt) },
+    rating: { type: GraphQLNonNull(GraphQLFloat) }
+  }
+});
+
+const ListingInput = new GraphQLInputObjectType({
+    name: 'ListingInput',
+    fields: () => ({
+        id: { type: GraphQLNonNull(GraphQLID) },
+        title: { type: GraphQLNonNull(GraphQLString) },
+        image: { type: GraphQLNonNull(GraphQLString) },
+        address: { type: GraphQLNonNull(GraphQLString) },
+        price: { type: GraphQLNonNull(GraphQLInt) },
+        numOfGuests: { type: GraphQLNonNull(GraphQLInt) },
+        numOfBeds: { type: GraphQLNonNull(GraphQLInt) },
+        numOfBaths: { type: GraphQLNonNull(GraphQLInt) },
+        rating: { type: GraphQLNonNull(GraphQLFloat) }
+    })
+  });
+```
+Import the missing types, to eliminate errors.
+After the hello definition introduce 'listings' in the 'query' constants:
+```
+...
+    hello: {
+      type: GraphQLString,
+      resolve: () => "Hello from the Query!"
+    },
+    listings: {
+    type: GraphQLNonNull(GraphQLList(GraphQLNonNull(Listing))),
+    resolve: () => {
+        return listings;
+      }
+  }
+  ...
+```
+Save the changes.
+10. Go to the browser and change the query code:
+```
+query {  
+  hello
+  listings {
+    id
+    title
+  }
+}
+```
+Press play, and you run your first practical GraphQL quesry!
+11. Go back to 'graphql.ts' and introduce 'mutations'. Paste the following code in 'mutation' constant:
+```
+...
+addListing: {
+        type: GraphQLNonNull(Listing),
+        args: { listing: 
+            { type: GraphQLNonNull(ListingInput) }
+        },        
+        resolve: (_root, { listing }) => {
+            listings.push(listing);
+            return listing;
+        }
+},
+deleteListing: {
+  type: GraphQLNonNull(Listing),
+  args: {
+    id: { type: GraphQLNonNull(GraphQLID) }
+  },
+  resolve: (_root, { id }) => {
+    for (let i = 0; i < listings.length; i++) {
+      if (listings[i].id === id) {
+        return listings.splice(i, 1)[0];
+      }
+    }
+
+    throw new Error("failed to deleted listing");
+  }
+...
+```
+instead of: 
+```
+  hello: {
+    type: GraphQLString,
+    resolve: () => "Hello from the Mutation!"
+  }
+```
+12. Go to the browser and and try out the created mutations in the playground, with the following code:
+```
+mutation {
+  addListing (
+    listing: {    
+      id: "004"
+      title: "Clean and fully furnished apartment. 5 min away from CN Tower II."
+      image: "https://res.cloudinary.com/tiny-house/image/upload/v1560641352/mock/Toronto/toronto-listing-1_exv0tf.jpg"
+      address: "3210 Scotchmere Dr W, Toronto, ON, CA"
+      price: 11000
+      numOfGuests: 3
+      numOfBeds: 1
+      numOfBaths: 2
+      rating: 4
+    }) {
+      id
+      title
+    }  
+#   deleteListing(id: "001") {
+#     id
+#     title
+#   }
+}
+```
+After play, the result return the inserted object's id and title. You can add as many fields you want to return, which exist in 'Listing'.
+13. Invert the comment between 'addListing' and 'deleteListing' and remove the first entry from the list.
+Then run:
+```
+query {  
+  listings {
+    id
+    title
+    address
+    price
+    numOfGuests
+    numOfBeds
+    numOfBaths
+    rating
+  }
+}
+```
+to check the result.
+
+** Next we'll introduce GraphQL Schema **
 
 MAINTAINERS
 -----------
