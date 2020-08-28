@@ -466,7 +466,104 @@ query {
 ```
 to check the result.
 
-** Next we'll introduce GraphQL Schema **
+** Introduce (Apollo) GraphQL Schema **
+More elegant and simpler to use 'gql'.
+1. Create a 'typeDefs.ts' in newly creted 'graphql' folder:
+```
+import { gql } from "apollo-server-express";
+
+export interface ListingInput {
+    id: string;
+    title: string;
+    description: string;
+    image: string;
+    type: string;
+    address: string;
+    price: number;
+    numOfGuests: number;
+}
+
+export const typeDefs = gql`
+type Listing {
+    id: ID!
+    title: String!
+    image: String!
+    address: String!
+    price: Int!
+    numOfGuests: Int!
+    numOfBeds: Int!
+    numOfBaths: Int!
+    rating: Int!
+}
+  
+input ListingInput {
+    id: ID!
+    title: String!
+    image: String!
+    address: String!
+    price: Int!
+    numOfGuests: Int!
+    numOfBeds: Int!
+    numOfBaths: Int!
+    rating: Int!
+}
+
+  type Query {
+    listings: [Listing!]!
+  }
+
+  type Mutation {
+    addListing(listing: ListingInput): Listing!
+    deleteListing(id: String): Listing!
+  }
+`;
+```
+2. In the same folder create 'resolvers.ts', with this content:
+```
+import { IResolvers  } from "apollo-server-express";
+import { ListingInput } from "./typeDefs";
+import { listings, Listing } from "../../listings";
+
+export const resolvers: IResolvers = {  
+  Query: {    
+    listings: (): Listing[] => {
+      return listings;
+    }
+  },
+  Mutation: {
+    addListing: (_root: undefined, { listing }: { listing: ListingInput }): Listing => {        
+      const newListing = {
+        id: listing.id, 
+        title: listing.title, 
+        image: listing.image,
+        price: Number(listing.price),
+        numOfGuests: listing.numOfGuests            
+      } as Listing;
+      listings.push(newListing);
+      return newListing;
+    },
+    deleteListing: (_root: undefined, { id }: { id: string }): Listing => {
+        for (let i = 0; i < listings.length; i++) {
+          if (listings[i].id === id) {
+            return listings.splice(i, 1)[0];
+          }
+        }
+    
+        throw new Error("failed to deleted listing");
+      }
+  }
+};
+```
+3. Since all of the logic has been out sourced from 'graphql.ts' this file can be deleted safely.
+4. Import in main 'index.ts' the typeDefs and resolvers:
+```
+import { typeDefs, resolvers } from './graphql';
+````
+and configure these in ApolloServer:
+```
+const server = new ApolloServer({typeDefs, resolvers});
+```
+Run the project and everything should function as before.
 
 MAINTAINERS
 -----------
